@@ -19,5 +19,5 @@ docker-compose up
 ```
 
 ブラウザで[localhost:3000/hello](http://localhost:3000/hello)にアクセスし、以下の画面が表示されたら、構築完了。
-![セットアップ完了後の画面](./static/setup_completed.png)
+![セットアップ完了後の画面](static/img/setup_completed.png)
 
