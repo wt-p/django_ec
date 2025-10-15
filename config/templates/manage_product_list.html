@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}
+Daily Select Manage Top
+{% endblock %}
+
+{% block content %}
+<!-- Navigation-->
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container px-4 px-lg-5">
+        <a class="navbar-brand" href="{% url 'manage_product:list' %}">Daily Select Manage</a>
+        <button class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent"
+                aria-expanded="false"
+                aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <a href="{% url 'manage_product:create' %}" class="btn btn-primary ms-auto">
+                <i class="bi bi-plus-circle me-1"></i>
+                商品の追加
+            </a>
+        </div>
+    </div>
+</nav>
+<!-- Header-->
+<header class="bg-dark py-5">
+    <div class="container px-4 px-lg-5 my-5">
+        <div class="text-center text-white">
+            <h1 class="display-4 fw-bolder">Daily Select Manage</h1>
+            <p class="lead fw-normal text-white-50 mb-0">
+                商品の追加・編集・削除、在庫や情報の更新を行うための管理者用ページです。
+            </p>
+        </div>
+    </div>
+</header>
+<!-- Section-->
+<section class="py-5">
+    <div class="container px-4 px-lg-5 mt-5">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+        <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
+            {% for manage_product in manage_products %}
+                <div class="col mb-5">
+                    <div class="card h-100">
+                        <div class="position-relative">
+                            <!-- Sale badge-->
+                            {% if manage_product.sale and manage_product.sale_price %}
+                                <div class="badge bg-dark text-white position-absolute" style="top: 0.5rem; right: 0.5rem">
+                                    セール
+                                </div>
+                            {% endif %}
+                            <!-- Product image-->
+                            <img class="card-img-top product-image"
+                                 src="{% if manage_product.image %}
+                                          {{ manage_product.image.url }}
+                                      {% else %}
+                                          {% static 'img/no_image.png' %}
+                                      {% endif %}"
+                                 alt="{{ manage_product.name }}" />
+                            <!-- Product details-->
+                            <div class="card-body p-4">
+                                <div class="text-center">
+                                    <!-- Product name-->
+                                    <h5 class="fw-bolder">{{ manage_product.name }}</h5>
+                                   <!-- Product reviews-->
+                                    <div class="d-flex justify-content-center small text-warning mb-2">
+                                        <div class="bi-star-fill"></div>
+                                        <div class="bi-star-fill"></div>
+                                        <div class="bi-star-fill"></div>
+                                        <div class="bi-star-fill"></div>
+                                        <div class="bi-star-fill"></div>
+                                    </div>
+                                    <!-- Product price-->
+                                    {% if manage_product.sale and manage_product.sale_price %}
+                                        <span class="text-muted text-decoration-line-through">
+                                            ￥{{ manage_product.price | intcomma }}
+                                        </span>
+                                        ￥{{ manage_product.sale_price | intcomma }}
+                                    {% else %}
+                                        ￥{{ manage_product.price | intcomma }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <!-- これとposition-relativeでカード全体がリンク化される -->
+                            <a class="stretched-link" href="{% url 'manage_product:edit' manage_product.pk %}"></a>
+                        </div>
+                        <!-- Product actions-->
+                        <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
+                            <div class="d-flex justify-content-center">
+                                <a class="btn btn-danger mt-auto position-relative z-1"
+                                   href="{% url 'manage_product:delete' manage_product.pk %}">
+                                    削除
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="d-flex flex-column justify-content-center align-items-center
+                    text-center">
+                    <i class="bi-bag-x fs-1 opacity-50 mb-2"></i>
+                    <h5>商品がありません</h5>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}
