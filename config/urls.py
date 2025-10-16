@@ -8,4 +8,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('hello/', TemplateView.as_view(template_name='hello.html')),
     path('product/', include('products.urls')),
+    path('manage/product/', include('products.manage_urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
