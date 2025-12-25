@@ -1,5 +1,5 @@
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView
-from .models import Product, Category
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
+from .models import Product, Category, Order
 from django.urls import reverse_lazy
 from .forms import ProductForm
 from django.contrib.messages.views import SuccessMessageMixin
@@ -35,3 +35,20 @@ class ManageProductDelete(SuccessMessageMixin, DeleteView):
     context_object_name = 'manage_product'
     success_url = reverse_lazy('manage_product:list')
     success_message = '商品を削除しました'
+
+
+class ManageOrderList(ListView):
+    model = Order
+    template_name = 'manage_order_list.html'
+    context_object_name = 'orders'
+
+
+class ManageOrderDetail(DetailView):
+    model = Order
+    template_name = 'manage_order_detail.html'
+    context_object_name = 'order'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['order_items'] = self.object.order_items.all()
+        return context

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+</head>
+<body style="font-family: 'Helvetica Neue', Arial, sans-serif; color: #333; line-height: 1.6; margin: 0; padding: 20px;">
+    <div style="max-width: 600px; margin: auto; border: 1px solid #eee; padding: 20px; border-radius: 10px;">
+        <h2 style="color: #0d6efd; text-align: center; border-bottom: 2px solid #0d6efd; padding-bottom: 10px;">
+            Thank you for your order!
+        </h2>
+
+        <p>{{ order.last_name }} {{ order.first_name }} 様</p>
+        <p>Daily Selectをご利用いただきありがとうございます。ご注文が完了いたしました。</p>
+
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            <p style="margin: 0; font-weight: bold; color: #555;">注文番号: #{{ order.id }}</p>
+            <p style="margin: 5px 0 0; font-size: 0.9em; color: #777;">注文日時: {{ order.created_at|date:"Y/m/d H:i" }}</p>
+        </div>
+
+        <h3 style="font-size: 1.1em; border-left: 4px solid #0d6efd; padding-left: 10px; margin-bottom: 15px;">配送先情報</h3>
+        <p style="margin-bottom: 25px;">
+            〒{{ order.zip_code }}<br>
+            {{ order.address }}<br>
+            {% if order.address2 %}
+                {{ order.address2 }}
+            {% endif %}
+        </p>
+
+        <h3 style="font-size: 1.1em; border-left: 4px solid #0d6efd; padding-left: 10px; margin-bottom: 15px;">注文明細</h3>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <thead>
+                <tr style="border-bottom: 2px solid #eee; text-align: left;">
+                    <th style="padding: 10px 0;">商品名</th>
+                    <th style="padding: 10px 0; text-align: center;">数量</th>
+                    <th style="padding: 10px 0; text-align: right;">小計</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in order_items %}
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 10px 0;">{{ item.name_at_purchase }}</td>
+                    <td style="padding: 10px 0; text-align: center;">{{ item.quantity }}</td>
+                    <td style="padding: 10px 0; text-align: right;">¥{{ item.subtotal }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="2" style="padding: 20px 0; text-align: right; font-weight: bold;">合計金額 (税込)</td>
+                    <td style="padding: 20px 0; text-align: right; font-weight: bold; font-size: 1.2em; color: #0d6efd;">
+                        ¥{{ order.total_price }}
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div style="text-align: center; margin-top: 30px; font-size: 0.8em; color: #999;">
+            <p>Copyright &copy; Daily Select {% now "Y" %}</p>
+        </div>
+    </div>
+</body>
+</html>

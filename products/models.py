@@ -84,3 +84,54 @@ class CartItem(models.Model):
 
     def __str__(self):
         return f"{self.product.name} ({self.quantity}個) in Cart ({self.cart.session_key})"
+
+
+class Order(models.Model):
+    last_name = models.CharField(max_length=20)
+    first_name = models.CharField(max_length=20)
+    email = models.EmailField(max_length=254)
+    tel = models.CharField(max_length=12)
+    zip_code = models.CharField(max_length=7)
+    address = models.CharField(max_length=250)
+    address2 = models.CharField(max_length=250, blank=True)
+
+    # カード情報
+
+    cc_name = models.CharField(max_length=30)
+    cc_number = models.CharField(max_length=19)
+    # 月/年 (MM/YY)
+    cc_expiration = models.CharField(max_length=5)
+    # セキュリティコード
+    cc_cvv2 = models.CharField(max_length=4)
+
+    total_price = models.PositiveIntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def cc_last_four_number(self):
+        # カード番号が~19桁まであるので末尾4桁だけ
+        if self.cc_number:
+            return str(self.cc_number)[-4:]
+        return ""
+
+    def __str__(self):
+        return f"Order #{self.id} - {self.last_name} {self.first_name} (¥{self.total_price:,}) - {self.created_at}"
+
+
+class OrderItem(models.Model):
+    order = models.ForeignKey(Order, related_name='order_items', on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    # 商品名を変更しても問題ないように注文時の商品名をコピーしておく
+    name_at_purchase = models.CharField(max_length=50)
+    # 価格変更しても問題ないように注文時の価格をコピーしておく
+    price_at_purchase = models.PositiveIntegerField()
+    quantity = models.PositiveIntegerField()
+
+    @property
+    def subtotal(self):
+        # 購入時の単価での小計
+        return self.price_at_purchase * self.quantity
+
+    def __str__(self):
+        return f"Order #{self.order.id} | {self.name_at_purchase} x {self.quantity}"

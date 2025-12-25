@@ -1,6 +1,8 @@
 from django import forms
-from .models import Product, Category
+from .models import Product, Category, Order
+from datetime import datetime
 import magic
+import re
 
 
 # class CustomClearableFileInput(ClearableFileInput):
@@ -116,3 +118,138 @@ class ProductForm(forms.ModelForm):
             elif price and sale_price >= price:
                 self.add_error('sale_price', 'セール価格は通常価格よりも安く設定してください')
         return cleaned
+
+
+class OrderForm(forms.ModelForm):
+    class Meta:
+        model = Order
+        fields = (
+            'last_name', 'first_name', 'email', 'tel',
+            'zip_code', 'address', 'address2',
+            'cc_name', 'cc_number', 'cc_expiration', 'cc_cvv2'
+        )
+
+        error_messages = {
+            'last_name': {
+                'required': '姓は必須です',
+            },
+            'first_name': {
+                'required': '名は必須です',
+            },
+            'email': {
+                'required': 'メールアドレスは必須です',
+                'invalid': '有効なメールアドレスを正しく入力してください',
+            },
+            'tel': {
+                'required': '電話番号は必須です',
+            },
+            'zip_code': {
+                'required': '郵便番号は必須です',
+            },
+            'address': {
+                'required': '住所は必須です',
+            },
+            'cc_name': {
+                'required': 'カード名義人は必須です',
+            },
+            'cc_number': {
+                'required': 'カード番号は必須です',
+            },
+            'cc_expiration': {
+                'required': '有効期限（月/年）は必須です',
+            },
+            'cc_cvv2': {
+                'required': 'CVV2は必須です',
+            },
+        }
+
+        labels = {
+            'last_name': '姓',
+            'first_name': '名',
+            'email': 'メールアドレス',
+            'tel': '電話番号（半角数字のみ）',
+            'zip_code': '郵便番号',
+            'address': '住所',
+            'address2': '建物名・部屋番号（任意）',
+            'cc_name': 'カード名義人',
+            'cc_number': 'カード番号',
+            'cc_expiration': '有効期限（月/年）',
+            'cc_cvv2': 'CVV2',
+        }
+
+        help_texts = {
+            'tel': 'ハイフンなしの半角数字で入力してください',
+            'cc_name': 'カードに記載されているフルネーム',
+            'cc_expiration': '例: 12/28 (月/年)',
+            'cc_cvv2': '裏面の3〜4桁の番号'
+        }
+
+        widgets = {
+            'last_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '山田'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '太郎'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'you@example.com'}),
+            'tel': forms.TextInput(attrs={
+                'class': 'form-control', 'type': 'tel', 'pattern': r'\d*',
+                'maxlength': '11', 'placeholder': '09012345678'
+            }),
+            'zip_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '1000001', 'maxlength': '7'}),
+            'address': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '東京都千代田区...'}),
+            'address2': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '〇〇マンション 101号室'}),
+            'cc_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'TARO YAMADA'}),
+            'cc_number': forms.TextInput(attrs={'class': 'form-control',
+                                                'placeholder': '12345678901234',
+                                                'maxlength': '19'
+                                                }),
+            'cc_expiration': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '12/34',
+                'maxlength': '5',
+                'id': 'cc-expiration'
+            }),
+            'cc_cvv2': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '567', 'maxlength': '4'}),
+        }
+
+    # 電話番号のバリデーション
+    def clean_tel(self):
+        tel = self.cleaned_data.get('tel')
+        if not re.match(r'^\d{10,11}$', tel):
+            raise forms.ValidationError('電話番号はハイフンなしの10桁または11桁の数字で入力してください')
+        return tel
+
+    # 郵便番号のバリデーション
+    def clean_zip_code(self):
+        zip_code = self.cleaned_data.get('zip_code')
+        if not re.match(r'^\d{7}$', zip_code):
+            raise forms.ValidationError('郵便番号はハイフンなしの7桁の数字で入力してください')
+        return zip_code
+
+    # カード番号のバリデーション
+    def clean_cc_number(self):
+        cc_number = self.cleaned_data.get('cc_number')
+        if not re.match(r'^\d{14,19}$', cc_number):
+            raise forms.ValidationError('有効なカード番号（14〜19桁）を数字で入力してください')
+        return cc_number
+
+    # カード有効期限のバリデーション
+    def clean_cc_expiration(self):
+        expiration = self.cleaned_data.get('cc_expiration')
+
+        # 形式チェック
+        if not re.match(r'^(0[1-9]|1[0-2])\/\d{2}$', expiration):
+            raise forms.ValidationError('有効期限は月/年（MM/YY）の形式で正しく入力してください')
+
+        # 有効期限チェック
+        month, year = map(int, expiration.split('/'))
+        year += 2000
+        current = datetime.now()
+        if year < current.year or (year == current.year and month < current.month):
+            raise forms.ValidationError('有効期限が切れています')
+
+        return expiration
+
+    # cvv2の形式チェック
+    def clean_cc_cvv2(self):
+        cvv2 = self.cleaned_data.get('cc_cvv2')
+        if not re.match(r'^\d{3,4}$', cvv2):
+            raise forms.ValidationError('セキュリティコードは3桁または4桁の数字で入力してください')
+        return cvv2
