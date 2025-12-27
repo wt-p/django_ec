@@ -53,6 +53,14 @@ class Cart(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    @property
+    def total_price(self):
+        return sum(item.subtotal for item in self.items.all())
+
+    @property
+    def is_empty(self):
+        return not self.items.exists()
+
     def __str__(self):
         return self.session_key
 
