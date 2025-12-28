@@ -131,3 +131,5 @@ MESSAGE_TAGS = {
     # errorをdangerに書き換える
     messages.ERROR: 'danger',
 }
+
+DEFAULT_FROM_EMAIL = 'onboarding@resend.dev'

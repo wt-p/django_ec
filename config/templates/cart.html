@@ -31,196 +31,220 @@ Daily Select Checkout
 </head>
 <div class="container">
     <main>
-        <div class="py-5 text-center">
-            <h1 class="h2">Checkout form</h1>
-            <p class="lead">ご注文の確認と、お届け先・お支払い方法をご入力ください。</p>
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        </div>
-        <div class="row g-5">
-            <div class="col-md-5 col-lg-4 order-md-last">
-                <h4 class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="text-primary">Your cart</span>
-                    <span class="badge bg-primary rounded-pill">{{ cart_items | length }}</span>
-                </h4>
-                <ul class="list-group mb-3">
-                    {% for item in cart_items %}
-                    <li class="list-group-item d-flex justify-content-between lh-sm">
-                        <div>
-                            <h6 class="my-0">{{ item.product.name }}</h6>
-                            <small class="text-body-secondary">
-                                単価:
-                                {% if item.product.sale and item.product.sale_price %}
-                                    <span class="text-decoration-line-through">
-                                        ￥{{ item.product.price | intcomma }}
-                                    </span>
-                                    ￥{{ item.product.sale_price | intcomma }}
-                                {% else %}
-                                    ￥{{ item.product.price | intcomma }}
-                                {% endif %}
-                                / 数量: {{ item.quantity }}
-                            </small>
-                            <div class="mt-1">
-                                <a href="{% url 'cart_item_delete' pk=item.pk %}"
-                                   class="btn btn-sm btn-outline-danger py-0 px-1"
-                                   onclick="return confirm('本当にカートから「{{ item.product.name }}」を削除しますか？');">
-                                    削除
-                                </a>
-                            </div>
+        {% if cart_items %}
+            <div class="py-5 text-center">
+                <h1 class="h2">Checkout form</h1>
+                <p class="lead">ご注文の確認と、お届け先・お支払い方法をご入力ください。</p>
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
-                        <span class="text-body-secondary">￥{{ item.subtotal | intcomma }}</span>
-                    </li>
-                    {% empty %}
-                        <li class="list-group-item d-flex justify-content-between lh-sm">
-                            <h6 class="my-0">カートに商品はありません。</h6>
-                        </li>
                     {% endfor %}
-
-                    {% if cart_items %}
-                        <li class="list-group-item d-flex justify-content-between bg-body-tertiary">
-                            <div class="text-success">
-                                <h6 class="my-0">Promo code</h6>
-                                <small>EXAMPLECODE</small>
-                            </div>
-                            <span class="text-success">−￥5</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between">
-                            <span>Total (JPY)</span>
-                            <strong>￥{{ total_price | intcomma }}</strong>
-                        </li>
-                    {% endif %}
-                </ul>
-
-                {% if cart_items %}
-                    <form class="card p-2">
-                        <div class="input-group">
-                            <input type="text" class="form-control" placeholder="Promo code">
-                            <button type="submit" class="btn btn-secondary">使用する</button>
-                        </div>
-                    </form>
                 {% endif %}
             </div>
-            <div class="col-md-7 col-lg-8">
-                <h4 class="mb-3">Billing address</h4>
-                <form class="needs-validation" novalidate>
-                    <div class="row g-3">
-                        <div class="col-sm-6">
-                            <label for="firstName" class="form-label">First name</label>
-                            <input type="text" class="form-control" id="firstName" placeholder="" value="" required>
-                            <div class="invalid-feedback">Valid first name is required.</div>
-                        </div>
-                        <div class="col-sm-6">
-                            <label for="lastName" class="form-label">Last name</label>
-                            <input type="text" class="form-control" id="lastName" placeholder="" value="" required>
-                            <div class="invalid-feedback">Valid last name is required.</div>
-                        </div>
-                        <div class="col-12">
-                            <label for="username" class="form-label">Username</label>
-                            <div class="input-group has-validation">
-                                <span class="input-group-text">@</span>
-                                <input type="text" class="form-control" id="username" placeholder="Username" required>
-                                <div class="invalid-feedback">Your username is required.</div>
+            <div class="row g-5">
+                <div class="col-md-5 col-lg-4 order-md-last">
+                    <h4 class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-primary">Your cart</span>
+                        <span class="badge bg-primary rounded-pill">{{ cart_items | length }}</span>
+                    </h4>
+                    <ul class="list-group mb-3">
+                        {% for item in cart_items %}
+                        <li class="list-group-item d-flex justify-content-between lh-sm">
+                            <div>
+                                <h6 class="my-0">{{ item.product.name }}</h6>
+                                <small class="text-body-secondary">
+                                    単価:
+                                    {% if item.product.sale and item.product.sale_price %}
+                                        <span class="text-decoration-line-through">
+                                            ￥{{ item.product.price | intcomma }}
+                                        </span>
+                                        ￥{{ item.product.sale_price | intcomma }}
+                                    {% else %}
+                                        ￥{{ item.product.price | intcomma }}
+                                    {% endif %}
+                                    / 数量: {{ item.quantity }}
+                                </small>
+                                <div class="mt-1">
+                                    <a href="{% url 'cart_item_delete' pk=item.pk %}"
+                                       class="btn btn-sm btn-outline-danger py-0 px-1"
+                                       onclick="return confirm('本当にカートから「{{ item.product.name }}」を削除しますか？');"
+                                    >
+                                        削除
+                                    </a>
+                                </div>
+                            </div>
+                            <span class="text-body-secondary">￥{{ item.subtotal | intcomma }}</span>
+                        </li>
+                        {% endfor %}
+
+                        {% if cart_items %}
+                            <li class="list-group-item d-flex justify-content-between bg-body-tertiary">
+                                <div class="text-success">
+                                    <h6 class="my-0">Promo code</h6>
+                                    <small>EXAMPLECODE</small>
+                                </div>
+                                <span class="text-success">−￥5</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Total (JPY)</span>
+                                <strong>￥{{ total_price | intcomma }}</strong>
+                            </li>
+                        {% endif %}
+                    </ul>
+
+                    {% if cart_items %}
+                        <form class="card p-2">
+                            <div class="input-group">
+                                <input type="text" class="form-control" placeholder="Promo code">
+                                <button type="submit" class="btn btn-secondary">使用する</button>
+                            </div>
+                        </form>
+                    {% endif %}
+                </div>
+                <div class="col-md-7 col-lg-8">
+                    <h4 class="mb-3">お届け先</h4>
+                    <form class="needs-validation" method="post" action="{% url 'checkout' %}" novalidate>
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <label for="{{ form.last_name.id_for_label }}" class="form-label">{{ form.last_name.label }}</label>
+                                {{ form.last_name }}
+                                {% if form.last_name.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.last_name.errors.0 }}</div>
+                                {% else %}
+                                    <div class="invalid-feedback">必須です</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-sm-6">
+                                <label for="{{ form.first_name.id_for_label }}" class="form-label">{{ form.first_name.label }}</label>
+                                {{ form.first_name }}
+                                {% if form.first_name.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.first_name.errors.0 }}</div>
+                                {% else %}
+                                    <div class="invalid-feedback">必須です</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-sm-6">
+                                <label for="{{ form.tel.id_for_label }}" class="form-label">{{ form.tel.label }}</label>
+                                <div class="input-group has-validation">
+                                    {{ form.tel }}
+                                    {% if form.tel.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.tel.errors.0 }}</div>
+                                    {% else %}
+                                        <div class="invalid-feedback">必須です</div>
+                                    {% endif %}
+                                </div>
+                                <small class="text-body-secondary d-block mt-1">{{ form.tel.help_text }}</small>
+                            </div>
+
+                            <div class="col-12">
+                                <label for="{{ form.email.id_for_label }}" class="form-label">{{ form.email.label }}</label>
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.email.errors.0 }}</div>
+                                {% else %}
+                                    <div class="invalid-feedback">有効なメールアドレスを入力してください</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-3">
+                                <label for="{{ form.zip_code.id_for_label }}" class="form-label">{{ form.zip_code.label }}</label>
+                                {{ form.zip_code }}
+                                {% if form.zip_code.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.zip_code.errors.0 }}</div>
+                                {% else %}
+                                    <div class="invalid-feedback">必須です</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-12">
+                                <label for="{{ form.address.id_for_label }}" class="form-label">{{ form.address.label }}</label>
+                                {{ form.address }}
+                                {% if form.address.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.address.errors.0 }}</div>
+                                {% else %}
+                                    <div class="invalid-feedback">必須です</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-12">
+                                <label for="{{ form.address2.id_for_label }}" class="form-label">{{ form.address2.label }}</label>
+                                {{ form.address2 }}
                             </div>
                         </div>
-                        <div class="col-12">
-                            <label for="email" class="form-label">
-                                Email <span class="text-body-secondary">(Optional)</span>
-                            </label>
-                            <input type="email" class="form-control" id="email" placeholder="you@example.com">
-                            <div class="invalid-feedback">Please enter a valid email address for shipping updates.</div>
+
+                        <hr class="my-4">
+
+                        <h4 class="mb-3">お支払い方法</h4>
+                        <div class="my-3">
+                            <div class="form-check">
+                                <input id="credit" name="paymentMethod" type="radio" class="form-check-input" checked required>
+                                <label class="form-check-label" for="credit">Credit card</label>
+                            </div>
                         </div>
-                        <div class="col-12">
-                            <label for="address" class="form-label">Address</label>
-                            <input type="text" class="form-control" id="address" placeholder="1234 Main St" required>
-                            <div class="invalid-feedback">Please enter your shipping address.</div>
+
+                        <div class="row gy-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.cc_name.id_for_label }}" class="form-label">{{ form.cc_name.label }}</label>
+                                {{ form.cc_name }}
+                                <small class="text-body-secondary">{{ form.cc_name.help_text }}</small>
+                                {% if form.cc_name.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.cc_name.errors.0 }}</div>
+                                {% else %}
+                                    <div class="invalid-feedback">必須です</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="{{ form.cc_number.id_for_label }}" class="form-label">{{ form.cc_number.label }}</label>
+                                {{ form.cc_number }}
+                                {% if form.cc_number.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.cc_number.errors.0 }}</div>
+                                {% else %}
+                                    <div class="invalid-feedback">必須です</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-3">
+                                <label for="{{ form.cc_expiration.id_for_label }}" class="form-label">{{ form.cc_expiration.label }}</label>
+                                {{ form.cc_expiration }}
+                                <small class="text-body-secondary d-block mt-1">{{ form.cc_expiration.help_text }}</small>
+                                {% if form.cc_expiration.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.cc_expiration.errors.0 }}</div>
+                                {% else %}
+                                    <div class="invalid-feedback">必須です</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-3">
+                                <label for="{{ form.cc_cvv2.id_for_label }}" class="form-label">{{ form.cc_cvv2.label }}</label>
+                                {{ form.cc_cvv2 }}
+                                <small class="text-body-secondary d-block mt-1">{{ form.cc_cvv2.help_text }}</small>
+                                {% if form.cc_cvv2.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.cc_cvv2.errors.0 }}</div>
+                                {% else %}
+                                    <div class="invalid-feedback">必須です</div>
+                                {% endif %}
+                            </div>
                         </div>
-                        <div class="col-12">
-                            <label for="address2" class="form-label">
-                                Address 2 <span class="text-body-secondary">(Optional)</span>
-                            </label>
-                            <input type="text" class="form-control" id="address2" placeholder="Apartment or suite">
-                        </div>
-                        <div class="col-md-5">
-                            <label for="country" class="form-label">Country</label>
-                            <select class="form-select" id="country" required>
-                                <option value="">Choose...</option>
-                                <option>United States</option>
-                            </select>
-                            <div class="invalid-feedback">Please select a valid country.</div>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="state" class="form-label">State</label>
-                            <select class="form-select" id="state" required>
-                                <option value="">Choose...</option>
-                                <option>California</option>
-                            </select>
-                            <div class="invalid-feedback">Please provide a valid state.</div>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="zip" class="form-label">Zip</label>
-                            <input type="text" class="form-control" id="zip" placeholder="" required>
-                            <div class="invalid-feedback">Zip code required.</div>
-                        </div>
-                    </div>
-                    <hr class="my-4">
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input" id="same-address">
-                        <label class="form-check-label" for="same-address">Shipping address is the same as my billing address</label>
-                    </div>
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input" id="save-info">
-                        <label class="form-check-label" for="save-info">Save this information for next time</label>
-                    </div>
-                    <hr class="my-4">
-                    <h4 class="mb-3">Payment</h4>
-                    <div class="my-3">
-                        <div class="form-check">
-                            <input id="credit" name="paymentMethod" type="radio" class="form-check-input" checked required>
-                            <label class="form-check-label" for="credit">Credit card</label>
-                        </div>
-                        <div class="form-check">
-                            <input id="debit" name="paymentMethod" type="radio" class="form-check-input" required>
-                            <label class="form-check-label" for="debit">Debit card</label>
-                        </div>
-                        <div class="form-check">
-                            <input id="paypal" name="paymentMethod" type="radio" class="form-check-input" required>
-                            <label class="form-check-label" for="paypal">PayPal</label>
-                        </div>
-                    </div>
-                    <div class="row gy-3">
-                        <div class="col-md-6">
-                            <label for="cc-name" class="form-label">Name on card</label>
-                            <input type="text" class="form-control" id="cc-name" placeholder="" required>
-                            <small class="text-body-secondary">Full name as displayed on card</small>
-                            <div class="invalid-feedback">Name on card is required</div>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="cc-number" class="form-label">Credit card number</label>
-                            <input type="text" class="form-control" id="cc-number" placeholder="" required>
-                            <div class="invalid-feedback">Credit card number is required</div>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="cc-expiration" class="form-label">Expiration</label>
-                            <input type="text" class="form-control" id="cc-expiration" placeholder="" required>
-                            <div class="invalid-feedback">Expiration date required</div>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="cc-cvv" class="form-label">CVV</label>
-                            <input type="text" class="form-control" id="cc-cvv" placeholder="" required>
-                            <div class="invalid-feedback">Security code required</div>
-                        </div>
-                    </div>
-                    <hr class="my-4">
-                    <button class="w-100 btn btn-primary btn-lg" type="submit">Continue to checkout</button>
-                </form>
+
+                        <hr class="my-4">
+                        <button class="w-100 btn btn-primary btn-lg" type="submit">購入する</button>
+                    </form>
+                </div>
             </div>
-        </div>
+        {% else %}
+            <div class="py-5 text-center border bg-body-tertiary">
+                <h3 class="mb-4">カートに商品が入っていません</h3>
+                <p class="text-muted mb-4">お買い物を続けるには、商品一覧ページから商品を選択してください</p>
+                <a href="{% url 'product_list' %}" class="btn btn-primary btn-lg">商品一覧へ戻る</a>
+            </div>
+        {% endif %}
     </main>
 </div>
 {% block javascripts %}

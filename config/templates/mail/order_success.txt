@@ -1,0 +1,21 @@
+{{ order.last_name }} {{ order.first_name }} 様
+
+Daily Selectをご利用いただきありがとうございます。
+以下の内容でご注文を承りました。
+
+■注文番号: #{{ order.id }}
+■注文日時: {{ order.created_at|date:"Y/m/d H:i" }}
+
+■お届け先:
+〒{{ order.zip_code }}
+{{ order.address }} {{ order.address2|default:"" }}
+
+■注文内容:
+{% for item in order_items %}
+- {{ item.name_at_purchase }} (x{{ item.quantity }}): ¥{{ item.subtotal }}
+{% endfor %}
+
+合計金額: ¥{{ order.total_price }}
+
+商品到着まで今しばらくお待ちください。
+またのご利用を心よりお待ちしております。

@@ -1,5 +1,10 @@
 from django.urls import path
-from .manage_views import ManageProductList, ManageProductCreate, ManageProductUpdate, ManageProductDelete
+from .manage_views import (ManageProductList,
+                           ManageProductCreate,
+                           ManageProductUpdate,
+                           ManageProductDelete,
+                           ManageOrderList,
+                           ManageOrderDetail)
 from basicauth.decorators import basic_auth_required
 
 app_name = "manage_product"
@@ -10,4 +15,6 @@ urlpatterns = [
     path('create/', basic_auth_required(ManageProductCreate.as_view()), name='create'),
     path('edit/<int:pk>', basic_auth_required(ManageProductUpdate.as_view()), name='edit'),
     path('delete/<int:pk>', basic_auth_required(ManageProductDelete.as_view()), name='delete'),
+    path('order_list/', basic_auth_required(ManageOrderList.as_view()), name='order_list'),
+    path('order_detail/<int:pk>', basic_auth_required(ManageOrderDetail.as_view()), name='order_detail')
 ]

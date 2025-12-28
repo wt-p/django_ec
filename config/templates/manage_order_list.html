@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}購入明細一覧 - Daily Select Manage{% endblock %}
+
+{% block content %}
+<!-- Navigation-->
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container px-4 px-lg-5">
+        <a class="navbar-brand" href="{% url 'manage_product:list' %}">Daily Select Manage</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+                <li class="nav-item">
+                    <a class="nav-link active" aria-current="page" href="{% url 'manage_product:list' %}">Home</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<!-- Header-->
+<header class="bg-dark shadow-sm d-flex align-items-center" style="height: 100px;">
+    <div class="container text-center">
+        <h1 class="h4 fw-bolder text-white mb-1">購入明細一覧</h1>
+        <span class="badge rounded-pill bg-primary px-3 py-1 small">
+            全 {{ orders.count }} 件の注文
+        </span>
+    </div>
+</header>
+<!-- Section-->
+<section class="py-4">
+    <div class="container">
+        <div class="row gx-4 justify-content-center">
+            {% for order in orders %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="card-header bg-white border-bottom-0 pt-4 px-4 d-flex justify-content-between">
+                            <span class="badge bg-secondary">Order #{{ order.id }}</span>
+                            <small class="text-muted">{{ order.created_at | date:"Y/m/d H:i" }}</small>
+                        </div>
+                        <div class="card-body px-4 pt-2">
+                            <h5 class="card-title fw-bold mb-3">{{ order.last_name }} {{ order.first_name }} 様</h5>
+                            <div class="d-flex justify-content-between align-items-center bg-light p-3 rounded">
+                                <span class="small text-muted">合計</span>
+                                <span class="fw-bolder text-primary fs-5">¥{{ order.total_price | intcomma }}</span>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white border-top-0 pb-4 px-4 text-center">
+                            <a href="{% url 'manage_product:order_detail' pk=order.pk %}" class="btn btn-outline-dark w-100 stretched-link">
+                                購入明細詳細
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12 py-5 text-center bg-light rounded shadow-sm">
+                    <p class="lead mb-0 text-muted">現在、注文履歴はありません。</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

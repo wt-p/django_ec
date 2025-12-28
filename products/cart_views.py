@@ -1,7 +1,15 @@
 from django.views.generic import ListView
-from .models import Cart, CartItem, Product
-from django.shortcuts import redirect, get_object_or_404
+from .models import Cart, CartItem, Product, OrderItem
+from .forms import OrderForm
+from django.shortcuts import redirect, get_object_or_404, render
 from django.contrib import messages
+from django.db import transaction
+from django.conf import settings
+from django.template.loader import render_to_string
+from django.core.mail import send_mail
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class CartItemList(ListView):
@@ -21,6 +29,10 @@ class CartItemList(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        # テンプレートで {{ form }} が使えるようにフォームを追加
+        context['form'] = OrderForm()
+
         cart_items = context[self.context_object_name]
         total_price = sum(item.subtotal for item in cart_items)
         context['total_price'] = total_price
@@ -101,3 +113,87 @@ def delete_cart_item(request, pk):
 
     messages.success(request, f'{product_name} をカートから削除しました')
     return redirect('cart_list')
+
+
+def checkout(request):
+    if request.method != 'POST':
+        return redirect('cart_list')
+
+    form = OrderForm(request.POST)
+    # カートを取得
+    cart = Cart.objects.filter(session_key=request.session.session_key).first()
+
+    if not form.is_valid():
+        # これを渡さないとカートとフォームの入力値が空になる
+        context = {
+            'cart_items': cart.items.all() if cart else [],
+            'total_price': cart.total_price if cart else 0,
+            'form': form,
+        }
+        return render(request, 'cart.html', context)
+
+    # ここから下は「POSTかつバリデーション成功」の正常系
+
+    if not cart or cart.is_empty:
+        messages.error(request, 'カートに商品が入っていません')
+        return redirect('product_list')
+
+    # 注文確定処理
+    try:
+        with transaction.atomic():
+            # 注文を保存
+            order = form.save(commit=False)
+            order.total_price = cart.total_price
+            order.save()
+
+            # 明細を作成し、在庫を減らす
+            for item in cart.items.all():
+                product = item.product
+                # 在庫チェック
+                if product.stock < item.quantity:
+                    raise ValueError(f'{product.name}の在庫が足りません')
+
+                # 在庫を減らして保存
+                product.stock -= item.quantity
+                product.save()
+
+                # 注文明細を保存
+                OrderItem.objects.create(
+                    order=order,
+                    product=product,
+                    name_at_purchase=product.name,
+                    price_at_purchase=product.sale_price if product.sale else product.price,
+                    quantity=item.quantity
+                )
+
+            # カートを空にする
+            cart.items.all().delete()
+
+        # メール送信処理
+        try:
+            context = {
+                'order': order,
+                'order_items': order.order_items.all()
+            }
+
+            subject = f'【Daily Select】ご注文ありがとうございます（注文番号： #{order.id}）'
+            message_txt = render_to_string('mail/order_success.txt', context)
+            message_html = render_to_string('mail/order_success.html', context)
+
+            send_mail(
+                subject,
+                message_txt,
+                settings.DEFAULT_FROM_EMAIL,
+                [order.email],
+                # html_message=は省略不可
+                html_message=message_html,
+            )
+        except Exception as e:
+            logger.error(f'Failed to send mail: {e}')
+
+        messages.success(request, '購入ありがとうございます')
+        return redirect('product_list')
+
+    except ValueError as e:
+        messages.error(request, str(e))
+        return redirect('cart_list')
