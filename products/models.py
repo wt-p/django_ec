@@ -113,6 +113,8 @@ class Order(models.Model):
     cc_cvv2 = models.CharField(max_length=4)
 
     total_price = models.PositiveIntegerField()
+    # 購入明細で割引額を表示するため
+    discount_amount = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -143,3 +145,31 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"Order #{self.order.id} | {self.name_at_purchase} x {self.quantity}"
+
+
+class PromoCode(models.Model):
+    promo_code = models.CharField(max_length=7, unique=True)
+    discount_amount = models.IntegerField(
+        validators=[MinValueValidator(100), MaxValueValidator(1000)]
+    )
+    is_used = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    used_at = models.DateTimeField(null=True, blank=True)
+
+    @classmethod
+    def find_valid_code(cls, code):
+        # ガード句：空入力時に不要なDBクエリ（SQL発行）を防止しパフォーマンスを担保
+        if not code:
+            return None
+        return cls.objects.filter(promo_code=code).first()
+
+    @property
+    def is_valid(self):
+        return not self.is_used
+
+    def apply_discount(self, cart_total_price):
+        # 合計金額に対して割引適用後額を返却（0以下にならないように）
+        return max(cart_total_price - self.discount_amount, 0)
+
+    def __str__(self):
+        return f"{self.promo_code} (¥{self.discount_amount})"

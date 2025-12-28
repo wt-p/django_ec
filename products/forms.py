@@ -1,5 +1,5 @@
 from django import forms
-from .models import Product, Category, Order
+from .models import Product, Category, Order, PromoCode
 from datetime import datetime
 import magic
 import re
