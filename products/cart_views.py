@@ -36,7 +36,7 @@ class CartItemList(ListView):
 
         cart_items = context[self.context_object_name]
         original_total_price = sum(item.subtotal for item in cart_items)
-        applied_promo, discount, total_price = get_promo_details_and_final_price(
+        applied_promo, discount, total_price = _get_promo_details_and_final_price(
             self.request, original_total_price
         )
         context['discount'] = discount
@@ -121,7 +121,7 @@ def delete_cart_item(request, pk):
     return redirect('cart_list')
 
 
-def get_promo_details_and_final_price(request, cart_total_price):
+def _get_promo_details_and_final_price(request, cart_total_price):
     promo_id = request.session.get('applied_promo_id')
     applied_promo_code = None
     discount = 0
@@ -162,7 +162,7 @@ def checkout(request):
     form = OrderForm(request.POST)
     # カートを取得
     cart = Cart.objects.filter(session_key=request.session.session_key).first()
-    applied_promo, discount, total_price = get_promo_details_and_final_price(request, cart.total_price)
+    applied_promo, discount, total_price = _get_promo_details_and_final_price(request, cart.total_price)
 
     if not form.is_valid():
         # これを渡さないとカートとフォームの入力値が空になる
