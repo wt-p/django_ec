@@ -114,6 +114,22 @@
                         {% endfor %}
                     </tbody>
                     <tfoot class="bg-light border-top border-2">
+                        {% if order.discount_amount > 0 %}
+                        <tr>
+                            <td colspan="3" class="text-end py-2 fw-bold text-muted">小計 (定価)</td>
+                            <td class="pe-4 text-end py-2 fw-bold text-dark">
+                                {# discount_amount を足せば元の金額が出せる #}
+                                ¥{{ order.total_price|add:order.discount_amount | intcomma }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" class="text-end py-2 fw-bold text-success">プロモーション割引</td>
+                            <td class="pe-4 text-end py-2 fw-bold text-success">
+                                -¥{{ order.discount_amount | intcomma }}
+                            </td>
+                        </tr>
+                        {% endif %}
+
                         <tr>
                             <td colspan="3" class="text-end py-4 fw-bold text-muted">合計金額 (税込)</td>
                             <td class="pe-4 text-end py-4 fw-bolder text-primary fs-4">

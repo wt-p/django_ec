@@ -1,5 +1,5 @@
 from django.views.generic import ListView
-from .models import Cart, CartItem, Product, OrderItem
+from .models import Cart, CartItem, Product, OrderItem, PromoCode
 from .forms import OrderForm
 from django.shortcuts import redirect, get_object_or_404, render
 from django.contrib import messages
@@ -7,6 +7,7 @@ from django.db import transaction
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.core.mail import send_mail
+from django.utils import timezone
 import logging
 
 logger = logging.getLogger(__name__)
@@ -34,7 +35,12 @@ class CartItemList(ListView):
         context['form'] = OrderForm()
 
         cart_items = context[self.context_object_name]
-        total_price = sum(item.subtotal for item in cart_items)
+        original_total_price = sum(item.subtotal for item in cart_items)
+        applied_promo, discount, total_price = _get_promo_details_and_final_price(
+            self.request, original_total_price
+        )
+        context['discount'] = discount
+        context['applied_promo'] = applied_promo
         context['total_price'] = total_price
         return context
 
@@ -115,6 +121,40 @@ def delete_cart_item(request, pk):
     return redirect('cart_list')
 
 
+def _get_promo_details_and_final_price(request, cart_total_price):
+    promo_id = request.session.get('applied_promo_id')
+    applied_promo_code = None
+    discount = 0
+    discounted_total = cart_total_price
+
+    if promo_id:
+        applied_promo_code = PromoCode.objects.filter(id=promo_id, is_used=False).first()
+        if applied_promo_code:
+            discount = applied_promo_code.discount_amount
+            discounted_total = applied_promo_code.apply_discount(cart_total_price)
+        else:
+            # sessionに入っているのは本来有効なpromo_idにも関わらず、DBに有効なコードがない不整合状態のため、削除
+            request.session.pop('applied_promo_id', None)
+
+    return applied_promo_code, discount, discounted_total
+
+
+def apply_promo(request):
+    if request.method != 'POST':
+        return redirect('cart_list')
+
+    code = request.POST.get('promo_code')
+    promo_code = PromoCode.find_valid_code(code)
+
+    if promo_code and promo_code.is_valid:
+        request.session['applied_promo_id'] = promo_code.id
+        messages.success(request, f'プロモーションコード「{code}」を適用しました')
+    else:
+        messages.error(request, '無効なプロモーションコードです')
+
+    return redirect('cart_list')
+
+
 def checkout(request):
     if request.method != 'POST':
         return redirect('cart_list')
@@ -122,12 +162,15 @@ def checkout(request):
     form = OrderForm(request.POST)
     # カートを取得
     cart = Cart.objects.filter(session_key=request.session.session_key).first()
+    applied_promo, discount, total_price = _get_promo_details_and_final_price(request, cart.total_price)
 
     if not form.is_valid():
         # これを渡さないとカートとフォームの入力値が空になる
         context = {
             'cart_items': cart.items.all() if cart else [],
-            'total_price': cart.total_price if cart else 0,
+            'total_price': total_price,
+            'discount': discount,
+            'applied_promo': applied_promo,
             'form': form,
         }
         return render(request, 'cart.html', context)
@@ -143,7 +186,8 @@ def checkout(request):
         with transaction.atomic():
             # 注文を保存
             order = form.save(commit=False)
-            order.total_price = cart.total_price
+            order.total_price = total_price
+            order.discount_amount = discount
             order.save()
 
             # 明細を作成し、在庫を減らす
@@ -165,6 +209,12 @@ def checkout(request):
                     price_at_purchase=product.sale_price if product.sale else product.price,
                     quantity=item.quantity
                 )
+
+            if applied_promo:
+                applied_promo.is_used = True
+                applied_promo.used_at = timezone.now()
+                applied_promo.save()
+                request.session.pop('applied_promo_id', None)
 
             # カートを空にする
             cart.items.all().delete()

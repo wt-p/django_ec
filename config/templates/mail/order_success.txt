@@ -15,6 +15,9 @@ Daily Selectをご利用いただきありがとうございます。
 - {{ item.name_at_purchase }} (x{{ item.quantity }}): ¥{{ item.subtotal }}
 {% endfor %}
 
+{% if order.discount_amount > 0 %}
+割引額: -¥{{ order.discount_amount }}
+{% endif %}
 合計金額: ¥{{ order.total_price }}
 
 商品到着まで今しばらくお待ちください。
